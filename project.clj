@@ -1,4 +1,4 @@
-(defproject jersey-zoo-clj "1.0.0"
+(defproject jersey-zoo-clj "1.0.1"
   :description "jersey servlet with zookeeper connection"
   :aot [jerseyzoo.JerseyZooServletContainer] 
   :repl-init jerseyzoo.JerseyZooServletContainer
