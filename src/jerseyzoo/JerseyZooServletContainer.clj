@@ -1,27 +1,30 @@
 (ns jerseyzoo.JerseyZooServletContainer
   (:import (jersey CljJerseyServletContainer)
-           (java.util HashMap))
-  (:require [zookeeper :as zk])
+           (java.util HashMap)
+           (com.netflix.curator.framework CuratorFrameworkFactory)
+           (com.netflix.curator.retry RetryNTimes))
   (:gen-class :extends jersey.CljJerseyServletContainer
               :constructors {[String String] [String]}
               :state state
               :init init-state
-              :methods [#^{:static true} [ getConnection [String] Object]]))
+              :methods [#^{:static true} [ getFramework [String] Object]]))
 
-(def getConnection
+(def getFramework
   (memoize (fn [keepers]
-             (let [conn (zk/connect keepers)]
-               (ref conn)))))
+             (let [rp (RetryNTimes. 1000 100)
+                   fWork (CuratorFrameworkFactory/newClient keepers rp)]
+               (.start fWork)
+               fWork))))
 
-(defn -getConnection
+(defn -getFramework
   [keepers]
-  (getConnection keepers))
+  (getFramework keepers))
 
-(defn getZooConnection
+#_(defn getCuratorFramework
   [keepers]
-  (getConnection keepers))
+  (getFramework keepers))
 
 (defn -init-state
   [packages keepers]
-  [[packages] (ref {:keepers keepers :connection (getConnection keepers)})]
+  [[packages] (ref {:keepers keepers :fWork (getFramework keepers)})]
   )
